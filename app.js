@@ -25,6 +25,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
+app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {

@@ -2,8 +2,11 @@
 require('dotenv').config();
 const { Client } = require('pg');
 
-const SQL =
-        `CREATE TABLE IF NOT EXISTS usernames (
+const SQL =`
+        DROP TABLE IF EXISTS messages CASCADE;
+        DROP TABLE IF EXISTS usernames CASCADE;
+
+        CREATE TABLE usernames (
             id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             first_name VARCHAR(255),
             last_name VARCHAR(255),
@@ -16,7 +19,7 @@ const SQL =
             ('Bryan', 'Cranston', 'bryan@example.com', 'password123'),
             ('Odin', 'Allfather', 'odin@example.com', 'password123'),
             ('Damon', 'Salvatore', 'damon@example.com', 'password123');
-        CREATE TABLE IF NOT EXISTS messages (
+        CREATE TABLE messages (
             id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             user_id INTEGER REFERENCES usernames(id),
             message TEXT NOT NULL,
@@ -27,3 +30,20 @@ const SQL =
             (2, 'You shall not pass!'),
             (3, 'Hello, brother!');
             `;
+
+async function main() {
+    console.log('Seeding...');
+    const client = new Client({
+        user: process.env.PGUSER,
+        host: "localhost",
+        database: "top_users",
+        password: process.env.PGPASSWORD,
+        port: 5432,
+    });
+    await client.connect();
+    await client.query(SQL);
+    await client.end();
+    console.log('Seeding complete.');
+}
+
+main();
