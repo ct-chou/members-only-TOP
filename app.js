@@ -2,26 +2,26 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('node:path');
-const { Pool } = require('pg');
+// const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const { userInfo } = require('node:os');
 const LocalStrategy = require('passport-local').Strategy;
+const queries = require('./db/queries');
 
 
-const pool = new Pool({
-    host : 'localhost',
-    user : process.env.PG_USER,
-    password : process.env.PG_PASSWORD,
-    database: 'members_only_top',
-    port: process.env.PG_PORT || 5432
-});
+// const pool = new Pool({
+//     host : 'localhost',
+//     user : process.env.PG_USER,
+//     password : process.env.PG_PASSWORD,
+//     database: 'members_only_top',
+//     port: process.env.PG_PORT || 5432
+// });
 
 passport.use(
     new LocalStrategy(async (username, password, done) => {
         try {
-            const {rows} = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
-            const user = rows[0];
+            const user = await queries.findUserByUsername(username);
             const match = await bcrypt.compare(password, user.password);
 
             if (!user) {
@@ -43,8 +43,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
     try {
-        const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
-        const user = rows[0];
+        const user = await queries.findUserById(id);
         done(null, user);
     } catch (err) {
         done(err);
@@ -72,12 +71,7 @@ app.get('/sign-up', (req, res) => res.render('sign-up-form'));
 app.post('/sign-up', async (req, res, next) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        await pool.query("INSERT INTO users (first_name, last_name, username, password) VALUES ($1, $2, $3, $4)", [
-            req.body.first_name,
-            req.body.last_name,
-            req.body.username,
-            hashedPassword,
-        ]);
+        await queries.insertNewUser(req.body.firstName, req.body.lastName, req.body.username, hashedPassword);
         res.redirect('/');
     } catch (err) {
         console.error(err);
