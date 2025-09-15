@@ -7,6 +7,7 @@ const passport = require('passport');
 const { userInfo } = require('node:os');
 const LocalStrategy = require('passport-local').Strategy;
 const queries = require('./db/queries');
+const { body, validationResult } = require('express-validator');
 
 passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -58,16 +59,33 @@ app.get('/', (req, res) => res.render('index', { user: req.user }));
 
 
 app.get('/sign-up', (req, res) => res.render('sign-up-form'));
-app.post('/sign-up', 
-    async (req, res, next) => {
-        try {
-            const user = await queries.findUserByUsername(req.body.username);
+app.post('/sign-up', [
+        body('username').isEmail().withMessage('Username must be a valid email address'),
+        body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+        body('confirm_password').custom((value, { req }) => {
+            if (value !== req.body.password) {
+                throw new Error('Password confirmation does not match password');
+            }
+            return true;
+        }),
+        body('first_name').notEmpty().withMessage('First name is required'),
+        body('last_name').notEmpty().withMessage('Last name is required'),
+        body('username').custom(async (value) => {
+            const user = await queries.findUserByUsername(value);
             if (user) {
                 throw new Error('Username already in use');
             }
-            const passwordMatch = req.body.password === req.body.confirm_password;
-            if (!passwordMatch) {
-                throw new Error('Passwords do not match');
+            return true;
+        })
+    ],
+    async (req, res, next) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.render('sign-up-form', { 
+                    errors: errors.array(),
+                    formData: req.body  // Keep the form data to repopulate fields
+                });
             }
             const hashedPassword = await bcrypt.hash(req.body.password, 10);
             
