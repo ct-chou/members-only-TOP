@@ -2,21 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('node:path');
-// const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const { userInfo } = require('node:os');
 const LocalStrategy = require('passport-local').Strategy;
 const queries = require('./db/queries');
-
-
-// const pool = new Pool({
-//     host : 'localhost',
-//     user : process.env.PG_USER,
-//     password : process.env.PG_PASSWORD,
-//     database: 'members_only_top',
-//     port: process.env.PG_PORT || 5432
-// });
 
 passport.use(
     new LocalStrategy(async (username, password, done) => {
@@ -50,7 +40,6 @@ passport.deserializeUser(async (id, done) => {
     }
 });
 
-
 const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -62,22 +51,33 @@ app.use(session({
 }));
 app.use(passport.initialize()); 
 app.use(passport.session());
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => res.render('index', { user: req.user }));
 
 
 app.get('/sign-up', (req, res) => res.render('sign-up-form'));
-app.post('/sign-up', async (req, res, next) => {
-    try {
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        await queries.insertNewUser(req.body.firstName, req.body.lastName, req.body.username, hashedPassword);
-        res.redirect('/');
-    } catch (err) {
-        console.error(err);
-        return next(err);
-    }
-});
+app.post('/sign-up', 
+    async (req, res, next) => {
+        try {
+            const user = await queries.findUserByUsername(req.body.username);
+            if (user) {
+                throw new Error('Username already in use');
+            }
+            const passwordMatch = req.body.password === req.body.confirm_password;
+            if (!passwordMatch) {
+                throw new Error('Passwords do not match');
+            }
+            const hashedPassword = await bcrypt.hash(req.body.password, 10);
+            
+            await queries.insertNewUser(req.body.firstName, req.body.lastName, req.body.username, hashedPassword);
+            res.redirect('/');
+        } catch (err) {
+            console.error(err);
+            return next(err);
+        }
+    });
 
 app.post('/log-in', passport.authenticate('local', {
     successRedirect: '/',
@@ -90,8 +90,6 @@ app.get('/log-out', (req, res, next) => {
         res.redirect('/');
     });
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 
