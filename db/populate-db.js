@@ -4,24 +4,24 @@ const { Client } = require('pg');
 
 const SQL =`
         DROP TABLE IF EXISTS messages CASCADE;
-        DROP TABLE IF EXISTS usernames CASCADE;
+        DROP TABLE IF EXISTS users CASCADE;
 
-        CREATE TABLE usernames (
-            id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
             first_name VARCHAR(255),
             last_name VARCHAR(255),
-            email VARCHAR(255) UNIQUE NOT NULL,
+            username VARCHAR(255) UNIQUE NOT NULL,
             password VARCHAR(255) NOT NULL,
             created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             member_status VARCHAR(255) DEFAULT 'standard'
         );
-        INSERT INTO usernames (first_name, last_name, email, password) VALUES
+        INSERT INTO users (first_name, last_name, username, password) VALUES
             ('Bryan', 'Cranston', 'bryan@example.com', 'password123'),
             ('Odin', 'Allfather', 'odin@example.com', 'password123'),
             ('Damon', 'Salvatore', 'damon@example.com', 'password123');
         CREATE TABLE messages (
             id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-            user_id INTEGER REFERENCES usernames(id),
+            user_id INTEGER REFERENCES users(id),
             message TEXT NOT NULL,
             created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
@@ -32,11 +32,11 @@ const SQL =`
             `;
 
 async function main() {
-    console.log('Seeding...');
+    console.log('Seeding 1 2 3...');
     const client = new Client({
         user: process.env.PGUSER,
         host: "localhost",
-        database: "top_users",
+        database: "members_only_top",
         password: process.env.PGPASSWORD,
         port: 5432,
     });
