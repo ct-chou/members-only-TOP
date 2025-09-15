@@ -7,6 +7,8 @@ const { Pool } = require('pg');
 const passport = require('passport');
 const { userInfo } = require('node:os');
 const LocalStrategy = require('passport-local').Strategy;
+// const userRouter = require('./routes/userRouter');
+
 
 const pool = new Pool({
     host : 'localhost',
@@ -25,6 +27,9 @@ passport.use(
 
             if (!user) {
                 return done(null, false, { message: 'Incorrect username.' });
+            }
+            if (user.password !== password) {
+                return done(null, false, { message: 'Incorrect password.' });
             }
             // if (!match) {
             //     return done(null, false, { message: 'Incorrect password.' });
@@ -66,10 +71,10 @@ app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => res.render('index', { user: req.user }));
 
+
 app.get('/sign-up', (req, res) => res.render('sign-up-form'));
 app.post('/sign-up', async (req, res, next) => {
     try {
-        console.log(req.body);
         await pool.query("INSERT INTO users (first_name, last_name, username, password) VALUES ($1, $2, $3, $4)", [
             req.body.first_name,
             req.body.last_name,
@@ -82,6 +87,20 @@ app.post('/sign-up', async (req, res, next) => {
         return next(err);
     }
 });
+
+app.post('/log-in', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/'
+}));
+
+app.get('/log-out', (req, res, next) => {
+    req.logout(err => {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
+});
+
+
 
 const PORT = process.env.PORT || 3000;
 
