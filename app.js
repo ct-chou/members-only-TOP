@@ -56,7 +56,42 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => res.render('index', { user: req.user }));
-
+app.get('/success', (req, res) => res.render('success', { user: req.user }));
+app.get('/secret', (req, res) => res.render('secret', { user: req.user }));
+app.post('/secret', [
+    body('secretCode').custom(value => {
+        if (value !== "SECRET") {
+            throw new Error('Incorrect secret code');
+        }
+        return true;
+    })
+    ],
+    async (req, res, next) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.render('secret', { 
+                    errors: errors.array(),
+                    formData: req.body  // Keep the form data to repopulate fields
+                });
+            }
+            if (!req.user) {
+                return res.status(401).send('Unauthorized');
+            }
+            if (req.body.secretCode === "SECRET") {
+                console.log(`username is ${req.user.username}`);
+                await queries.updateUserMemberStatus(req.user.username, 'member');
+                return res.redirect('/success');
+            }
+            else {
+                return res.redirect('/secret');
+            }
+            
+        } catch (err) {
+            return next(err);
+        }
+    }
+);
 
 app.get('/sign-up', (req, res) => res.render('sign-up-form'));
 app.post('/sign-up', [
@@ -88,9 +123,15 @@ app.post('/sign-up', [
                 });
             }
             const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+            const newUser = await queries.insertNewUser(req.body.first_name, req.body.last_name, req.body.username, hashedPassword);
             
-            await queries.insertNewUser(req.body.firstName, req.body.lastName, req.body.username, hashedPassword);
-            res.redirect('/');
+            req.login(newUser, (err) => {
+                if (err) {
+                    return next(err);
+                }
+                return res.redirect('/secret');
+            });
         } catch (err) {
             console.error(err);
             return next(err);

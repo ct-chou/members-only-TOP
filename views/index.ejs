@@ -13,6 +13,12 @@
   </nav> -->
   <% if (locals.user) {%>
     <h1>WELCOME BACK <%= user.username %></h1>
+    <% if (user.member_status === 'member') { %>
+      <h2>you are a member!</h2>
+    <% } else { %>
+      <h2>you are not a member. enter the secret code to become a member!</h2>
+      <a href="/secret">ENTER SECRET CODE</a> <br>
+    <% } %>
     <a href="/log-out">LOG OUT</a>
   <% } else { %>
     <h1>please log in or <a href="/sign-up">sign up</a></h1>

@@ -23,9 +23,18 @@ async function findUserById(id) {
     return result.rows[0];
 }   
 
+async function updateUserMemberStatus(username, status) {
+    const result = await pool.query(
+        'UPDATE users SET member_status = $1 WHERE username = $2 RETURNING *',
+        [status, username]
+    );
+    return result.rows[0];
+}
+
 module.exports = {
     insertNewUser,
     getAllUsers,
     findUserByUsername,
-    findUserById
+    findUserById,
+    updateUserMemberStatus
 };
