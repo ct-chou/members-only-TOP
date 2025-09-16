@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Messages</title>
+</head>
+<body>
+    <nav>   
+        <a href="/">Home</a> |
+        <a href="/new-post">Create New Post</a> |
+        <a href="/log-out">Log Out</a>
+    </nav>
+    <h1>All Messages</h1>
+    <ul>
+        <% messages.forEach(function(message) { %>
+            <li>
+                <strong><%= message.username %>:</strong>
+                <%= message.message %>
+                <em>(<%= message.created_on.toLocaleString() %>)</em>
+            </li>
+        <% }); %>
+    </ul>
+</body>
+</html>

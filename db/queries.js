@@ -31,10 +31,30 @@ async function updateUserMemberStatus(username, status) {
     return result.rows[0];
 }
 
+async function getAllMessages() {
+    const result = await pool.query(
+        `SELECT messages.*, users.username 
+        FROM messages 
+        JOIN users ON messages.user_id = users.id 
+        ORDER BY messages.created_on DESC`
+    );
+    return result.rows;
+}
+
+async function insertNewMessage(userId, message) {
+    const result = await pool.query(
+        'INSERT INTO messages (user_id, message) VALUES ($1, $2) RETURNING *',
+        [userId, message]
+    );
+    return result.rows[0];
+}  
+
 module.exports = {
     insertNewUser,
     getAllUsers,
     findUserByUsername,
     findUserById,
+    getAllMessages,
+    insertNewMessage,
     updateUserMemberStatus
 };

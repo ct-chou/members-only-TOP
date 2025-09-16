@@ -15,6 +15,8 @@
     <h1>WELCOME BACK <%= user.username %></h1>
     <% if (user.member_status === 'member') { %>
       <h2>you are a member!</h2>
+      <a href="/new-post">CREATE A NEW POST</a> <br>
+      <a href="/posts">VIEW ALL POSTS</a> <br>
     <% } else { %>
       <h2>you are not a member. enter the secret code to become a member!</h2>
       <a href="/secret">ENTER SECRET CODE</a> <br>

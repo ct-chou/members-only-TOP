@@ -56,6 +56,36 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => res.render('index', { user: req.user }));
+app.get('/posts', async (req, res, next) => {
+    try {
+        const messages = await queries.getAllMessages();
+        res.render('posts', { user: req.user, messages });
+    } catch (err) {
+        return next(err);
+    }
+});
+app.get('/new-post', (req, res) => res.render('new-post', { user: req.user }));
+app.post('/posts/new',
+    body('message').notEmpty().withMessage('Message cannot be empty').isLength({ max: 1000 }).withMessage('Message cannot exceed 1000 characters'),
+    async (req, res, next) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.render('new-post', { 
+                    errors: errors.array(),
+                    formData: req.body  // Keep the form data to repopulate fields
+                });
+            }
+            if (!req.user) {
+                return res.status(401).send('Unauthorized');
+            }
+            await queries.insertNewMessage(req.user.id, req.body.message);
+            res.redirect('/posts');
+        } catch (err) {
+            return next(err);
+        }
+    }
+);  
 app.get('/success', (req, res) => res.render('success', { user: req.user }));
 app.get('/secret', (req, res) => res.render('secret', { user: req.user }));
 app.post('/secret', [
