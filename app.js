@@ -194,6 +194,27 @@ app.get('/log-out', (req, res, next) => {
     });
 });
 
+app.get('/become-admin', (req, res) => res.render('become-admin', { user: req.user }));
+
+app.post('/become-admin', async (req, res, next) => {
+    try {
+        if (!req.user) {
+            return res.status(401).send('Unauthorized');
+        }
+        if(req.body.adminPassword == "admin123") {
+            await queries.setAdminStatus(req.user.username, true);
+            res.redirect('/');
+        } else {
+            res.render('become-admin', { 
+                errors: [{ msg: 'Incorrect admin password' }],
+                user: req.user
+            });
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

@@ -15,6 +15,10 @@
     <h1>WELCOME BACK <%= user.username %></h1>
     <% if (user.member_status === 'member') { %>
       <h2>you are a member!</h2>
+      <h2>Admin Status: <%= user.admin_status || 'not assigned' %></h2>
+      <% if (user.admin_status !== 'admin') { %>
+        <a href="/become-admin">BECOME AN ADMIN</a> <br>
+      <% } %>
       <a href="/new-post">CREATE A NEW POST</a> <br>
       <h2>All Messages</h2>
       <ul>

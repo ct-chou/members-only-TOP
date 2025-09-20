@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Become Admin</title>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a> |
+        <% if (user) { %>
+            <a href="/logout">Logout</a>
+        <% } else { %>
+            <a href="/login">Login</a> |
+            <a href="/signup">Sign Up</a>
+        <% } %>
+    </nav>
+    <h1>Become an Admin</h1>
+    <% if (typeof errors !== 'undefined') { %>
+            <div class="error-container">
+            <ul>
+                <% errors.forEach(error => { %>
+                <li><%= error.msg %></li>
+                <% }) %>
+            </ul>
+            </div>
+    <% } %>
+    <form action="/become-admin" method="POST">
+        <label for="adminPassword">Admin Password:</label>
+        <input type="password" id="adminPassword" name="adminPassword" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

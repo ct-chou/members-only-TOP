@@ -31,6 +31,14 @@ async function updateUserMemberStatus(username, status) {
     return result.rows[0];
 }
 
+async function setAdminStatus(username, status) {
+    const result = await pool.query(
+        'UPDATE users SET admin_status = $1 WHERE username = $2 RETURNING *',
+        [status, username]
+    );
+    return result.rows[0];
+}
+
 async function getAllMessages() {
     const result = await pool.query(
         `SELECT messages.*, users.username 
@@ -56,5 +64,6 @@ module.exports = {
     findUserById,
     getAllMessages,
     insertNewMessage,
-    updateUserMemberStatus
+    updateUserMemberStatus,
+    setAdminStatus
 };
