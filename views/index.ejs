@@ -16,7 +16,7 @@
     <% if (user.member_status === 'member') { %>
       <h2>you are a member!</h2>
       <h2>Admin Status: <%= user.admin_status || 'not assigned' %></h2>
-      <% if (user.admin_status !== 'admin') { %>
+      <% if (!user.admin_status) { %>
         <a href="/become-admin">BECOME AN ADMIN</a> <br>
       <% } %>
       <a href="/new-post">CREATE A NEW POST</a> <br>
@@ -27,6 +27,12 @@
                 <strong><%= message.username %>:</strong>
                 <%= message.message %>
                 <em>(<%= message.created_on.toLocaleString() %>)</em>
+                <% if(user.admin_status) { %>
+                  <form action="/delete-message" method="POST" style="display:inline;">
+                    <input type="hidden" name="messageId" value="<%= message.id %>">
+                    <button type="submit">Delete</button>
+                  </form>
+                <% } %>
             </li>
         <% }); %>
       </ul>

@@ -94,7 +94,7 @@ app.post('/posts/new',
                 return res.status(401).send('Unauthorized');
             }
             await queries.insertNewMessage(req.user.id, req.body.message);
-            res.redirect('/posts');
+            res.redirect('/');
         } catch (err) {
             return next(err);
         }
@@ -214,6 +214,20 @@ app.post('/become-admin', async (req, res, next) => {
         return next(err);
     }
 });
+
+app.post('/delete-message', async (req, res, next) => {
+    try {
+        if (!req.user || !req.user.admin_status) {
+            return res.status(401).send('Unauthorized');
+        }
+        const messageId = req.body.messageId;
+        await queries.deleteMessageById(messageId);
+        res.redirect('/');
+    } catch (err) {
+        return next(err);
+    }
+});
+
 
 const PORT = process.env.PORT || 3000;
 
