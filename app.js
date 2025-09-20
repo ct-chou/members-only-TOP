@@ -55,7 +55,21 @@ app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 
-app.get('/', (req, res) => res.render('index', { user: req.user }));
+app.get('/', async (req, res, next) => {
+    try {
+        const messages = await queries.getAllMessages();
+        // console.log(messages);
+        if(req.user) {
+            res.render('index', { user: req.user, messages });
+        } else {
+            res.render('index', { user: req.user, 
+                messages: messages.map(msg => { return { message: msg.message }; }) } ); // Hide usernames if not logged in
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
 app.get('/posts', async (req, res, next) => {
     try {
         const messages = await queries.getAllMessages();
