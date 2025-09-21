@@ -2,6 +2,12 @@
 require('dotenv').config();
 const { Client } = require('pg');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const connectionString = isProduction
+  ? process.env.DATABASE_URL
+  : `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE || 'members_only_top'}`;
+
 const SQL =`
         DROP TABLE IF EXISTS messages CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
@@ -35,11 +41,8 @@ const SQL =`
 async function main() {
     console.log('Seeding 1 2 3...');
     const client = new Client({
-        user: process.env.PGUSER,
-        host: "localhost",
-        database: "members_only_top",
-        password: process.env.PGPASSWORD,
-        port: 5432,
+        connectionString,
+        ssl: isProduction ? { rejectUnauthorized: false } : false
     });
     await client.connect();
     await client.query(SQL);
